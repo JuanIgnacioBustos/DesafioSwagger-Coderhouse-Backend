@@ -11,6 +11,7 @@ import routerCarts from './routes/carts.router.js'
 import routerMessages from './routes/messages.router.js'
 import routerViews from './routes/views.router.js'
 import routerSession from './routes/session.router.js'
+import routerUsers from './routes/users.router.js'
 
 import { Server } from "socket.io";
 
@@ -27,13 +28,18 @@ import initializePassportLocal from './config/local.passport.js'
 import { initializePassportJWT } from './config/jwt.passport.js'
 
 import { generateProductsMock } from './mocks/products.mock.js'
+
 import { errorMiddleware } from './middlewares/error.js'
+
 import { addLogger } from './logger.js'
+
+import swaggerJSDoc from 'swagger-jsdoc'
+import swaggerUiExpress from 'swagger-ui-express'
 
 // initial configuration
 
 const app = express();
-connectDB();
+connectDB(config.MONGO_URL);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -62,6 +68,22 @@ app.use(passport.initialize())
 // logger
 
 app.use(addLogger)
+
+// swagger
+
+const swaggerOptions = {
+  definition: {
+      openapi: '3.0.1',
+      info: {
+          title: 'Proyecto de Backend - Coderhouse',
+          description: 'Documentación del proyecto de Backend - Coderhouse'
+      },
+  },
+  apis: [`${__dirname}/docs/**/*.yaml`]
+}
+
+const specs = swaggerJSDoc(swaggerOptions)
+app.use('/apidocs',swaggerUiExpress.serve, swaggerUiExpress.setup(specs))
 
 // server start and socket io
 
@@ -126,6 +148,7 @@ app.use("/api/messages", routerMessages);
 app.use("/api/products", routerProducts);
 app.use("/api/carts", routerCarts);
 app.use('/api/sessions', routerSession);
+app.use("/api/users", routerUsers)
 
 // mock - desafio 10 - TODO: Quiza quitar mas adelante
 
